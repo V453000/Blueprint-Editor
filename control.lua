@@ -1,4 +1,5 @@
-/c
+local mod_gui = require("mod-gui")
+
 
 function debug_print(text)
   game.print(text)
@@ -77,12 +78,7 @@ local map_settings =
 
   }
 
-
-local player = game.player or game.get_player(event and event.player_index or 1)
-
-blueprint_editor_original_position = player.position
-
-local function enter_blueprint_editing()
+local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
     if player.cursor_stack.name == 'blueprint' then
       if player.cursor_stack.is_blueprint_setup() == true then
@@ -163,7 +159,7 @@ local function enter_blueprint_editing()
   end
 end
 
-local function finish_blueprint_editing(blueprint_editor_original_position)
+local function finish_blueprint_editing(player, blueprint_editor_original_position)
   player.cursor_stack.set_stack('blueprint')
   player.cursor_stack.create_blueprint({
     surface = 'edit',
@@ -177,11 +173,54 @@ local function finish_blueprint_editing(blueprint_editor_original_position)
   })
   player.cursor_stack.label = blueprint_editor_original_label
   player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
-  player.teleport(blueprint_editor_original_position, 'nauvis')
+  player.teleport({0,0}, 'nauvis')
 end
 
-if player.surface.name == 'nauvis' then
-  enter_blueprint_editing()
-else
-  finish_blueprint_editing(blueprint_editor_original_position)
+
+function create_gui(player)
+  mod_gui.get_button_flow(player).add
+  {
+    type = "sprite-button",
+    name = "blueprint-edit-button",
+    sprite = "blueprint-editor-button-1",
+    style = mod_gui.button_style
+  }
+  mod_gui.get_button_flow(player).add
+  {
+    type = "sprite-button",
+    name = "blueprint-edit-button-exit",
+    sprite = "blueprint-editor-button-1",
+    style = mod_gui.button_style
+  }
+  -- mod_gui.get_frame_flow(player).add
+  -- {
+  --   type = "frame",
+  --   name = "blueprint-edit-frame",
+  --   caption = "Edit Blueprint",
+  --   style = mod_gui.frame_style,
+  --   visible = false
+  -- }
 end
+
+
+script.on_event(defines.events.on_player_created ,
+  function(event)
+    local player = game.get_player(event.player_index)
+    create_gui(player)
+  end
+)
+
+script.on_event(defines.events.on_gui_click ,
+  function(event)
+    if event.element.name == "blueprint-edit-button" then
+      local player = game.get_player(event.player_index)
+      blueprint_editor_original_position = player.position
+      enter_blueprint_editing(player)
+    end
+    if event.element.name == "blueprint-edit-button-exit" then
+      local player = game.get_player(event.player_index)
+      blueprint_editor_original_position = player.position
+      finish_blueprint_editing(player)
+    end
+  end
+)
