@@ -1,0 +1,11 @@
+{
+  "name": "Blueprint-Editor",
+  "version": "0.1.0",
+  "factorio_version": "0.18",
+  "title": "Blueprint-Editor",
+  "author": "V453000",
+  "contact": "",
+  "homepage": "",
+  "description": "Editing blueprints while preserving their name and settings.",
+  "dependencies": ["base"]
+}
