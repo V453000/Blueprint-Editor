@@ -1,4 +1,5 @@
 local mod_gui = require("mod-gui")
+local custom_mod_gui = require("custom-mod-gui")
 
 
 function debug_print(text)
@@ -78,6 +79,12 @@ local map_settings =
 
   }
 
+local function migrate_inventory(source, destination)
+  for item_name, item_count in pairs(source.get_inventory[1]) do
+    destination.insert{name = item_name, count = item_count}
+  end
+end
+
 local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
     if player.cursor_stack.name == 'blueprint' then
@@ -122,7 +129,8 @@ local function enter_blueprint_editing(player)
           ent.destroy()
         end
         debug_print('Destroyed entities.')
-
+        
+        player.toggle_map_editor()
         player.teleport({0,0}, e_name)
 
         player.cursor_stack.import_stack(original_blueprint_string)
@@ -174,18 +182,19 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
   player.cursor_stack.label = blueprint_editor_original_label
   player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
   player.teleport({0,0}, 'nauvis')
+  player.toggle_map_editor()
 end
 
 
-function create_gui(player)
-  mod_gui.get_button_flow(player).add
+function create_top_button(player)
+  custom_mod_gui.get_button_flow(player).add
   {
     type = "sprite-button",
     name = "blueprint-edit-button",
     sprite = "blueprint-editor-button-1",
     style = mod_gui.button_style
   }
-  mod_gui.get_button_flow(player).add
+  custom_mod_gui.get_button_flow(player).add
   {
     type = "sprite-button",
     name = "blueprint-edit-button-exit",
@@ -203,10 +212,42 @@ function create_gui(player)
 end
 
 
+function clear_bp_editor_popup (player)
+  if player.gui.center['bp-editor-popup'] then
+    player.gui.center['bp-editor-popup'].destroy()
+  end
+end
+
+function create_bp_editor_popup(player)
+  clear_bp_editor_popup(player)
+
+  local flow = player.gui.center.add({
+    type = 'flow',
+    name = 'bp-editor-popup-flow',
+    direction = 'vertical'
+  })
+  flow.style.height = player.display_resolution.height*0.8/player.display_scale
+  flow.style.vertical_align = 'bottom'
+  flow.style.horizontal_align = 'center'
+
+  local frame = flow.add({
+    type = 'frame',
+    name = 'bp-editor-popup-frame',
+    direction = 'vertical',
+    caption = 'Blueprint editor'
+  })
+  frame.style.vertically_stretchable = false
+  frame.ignored_by_interaction = false
+  frame.style.use_header_filler = true
+  
+  return frame
+end
+
+
 script.on_event(defines.events.on_player_created ,
   function(event)
     local player = game.get_player(event.player_index)
-    create_gui(player)
+    create_top_button(player)
   end
 )
 
@@ -216,6 +257,7 @@ script.on_event(defines.events.on_gui_click ,
       local player = game.get_player(event.player_index)
       blueprint_editor_original_position = player.position
       enter_blueprint_editing(player)
+      create_bp_editor_popup(player)
     end
     if event.element.name == "blueprint-edit-button-exit" then
       local player = game.get_player(event.player_index)
