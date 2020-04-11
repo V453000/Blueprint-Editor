@@ -1,12 +1,11 @@
 local mod_gui = require("mod-gui")
 local custom_mod_gui = require("custom-mod-gui")
 
-
 function debug_print(text)
   game.print(text)
 end
 
-local e_name = 'edit'
+local e_name = 'bp-editor-surface'
 
 
 local map_settings = 
@@ -85,44 +84,53 @@ local function migrate_inventory(source, destination)
   end
 end
 
+local function generate_lab_tile_surface(player, surface_name)
+  if game.surfaces[surface_name] then
+    debug_print('Edit surface found.')
+    edit_surface = game.surfaces[surface_name]
+  else
+    debug_print('Edit surface not found, creating...')
+    edit_surface = game.create_surface(surface_name, map_settings)
+    
+    edit_surface.request_to_generate_chunks( {0,0} , 8)
+    edit_surface.force_generate_chunk_requests()
+    player.force.chart_all()
+    
+    -- local old_tiles = edit_surface.find_tiles_filtered({})
+    -- local new_tiles = {}
+    -- for _, t in pairs(old_tiles) do
+    --   local coord_test = (t.position.x + t.position.y)%2
+    --   local tile_name = 'lab-white'
+    --   if (coord_test==0) then
+    --     tile_name = 'lab-dark-1'
+    --   else
+    --     tile_name = 'lab-dark-2'
+    --   end  
+    --   table.insert(new_tiles, {name = tile_name, position=t.position})
+    -- end
+    -- edit_surface.set_tiles(new_tiles)
+    -- debug_print('Generated lab tiles.')
+    
+    edit_surface.destroy_decoratives({invert=true})
+    debug_print('Destroyed decoratives.')
+  end
+
+  return edit_surface
+end
+
 local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
     if player.cursor_stack.name == 'blueprint' then
       if player.cursor_stack.is_blueprint_setup() == true then
+        create_bp_editor_popup(player)
+        visibility_bp_editor_popup(player, true)
+        visibility_bp_editor_button(player, false)
+
         blueprint_editor_original_label = player.cursor_stack.label
         blueprint_editor_original_blueprint_icons = player.cursor_stack.blueprint_icons
         local original_blueprint_string = player.cursor_stack.export_stack()
-
-        if game.surfaces[e_name] then
-          debug_print('Edit surface found.')
-          edit_surface = game.surfaces[e_name]
-        else
-          debug_print('Edit surface not found, creating...')
-          edit_surface = game.create_surface(e_name, map_settings)
-          
-          edit_surface.request_to_generate_chunks( {0,0} , 8)
-          edit_surface.force_generate_chunk_requests()
-          player.force.chart_all()
-
-          local old_tiles = edit_surface.find_tiles_filtered({})
-          local new_tiles = {}
-          for _, t in pairs(old_tiles) do
-            local coord_test = (t.position.x + t.position.y)%2
-            local tile_name = 'lab-white'
-            if (coord_test==0) then
-              tile_name = 'lab-dark-1'
-            else
-              tile_name = 'lab-dark-2'
-            end  
-            table.insert(new_tiles, {name = tile_name, position=t.position})
-          end
-          edit_surface.set_tiles(new_tiles)
-          debug_print('Generated lab tiles.')
-          
-          edit_surface.destroy_decoratives({invert=true})
-          debug_print('Destroyed decoratives.')
-        end
-
+      
+        --bp_editor_surface = generate_lab_tile_surface(player, 'bp-editor-surface')
 
         local entity_list = edit_surface.find_entities()
         for _, ent in pairs(entity_list) do
@@ -130,7 +138,9 @@ local function enter_blueprint_editing(player)
         end
         debug_print('Destroyed entities.')
         
-        player.toggle_map_editor()
+        if player.controller_type ~= 4 then
+          player.toggle_map_editor()
+        end
         player.teleport({0,0}, e_name)
 
         player.cursor_stack.import_stack(original_blueprint_string)
@@ -169,55 +179,68 @@ end
 
 local function finish_blueprint_editing(player, blueprint_editor_original_position)
   player.cursor_stack.set_stack('blueprint')
-  player.cursor_stack.create_blueprint({
-    surface = 'edit',
-    force = 'player',
-    area = {{-32*8, -32*8},{32*8,32*8}},
-    always_include_tiles = true,
-    include_entities = true,
-    include_modules = true,
-    include_trains = true,
-    include_station_names = true
-  })
-  player.cursor_stack.label = blueprint_editor_original_label
-  player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
-  player.teleport({0,0}, 'nauvis')
-  player.toggle_map_editor()
+  if game.surfaces['bp-editor-surface'] then
+    player.cursor_stack.create_blueprint({
+      surface = 'bp-editor-surface',
+      force = 'player',
+      area = {{-32*8, -32*8},{32*8,32*8}},
+      always_include_tiles = true,
+      include_entities = true,
+      include_modules = true,
+      include_trains = true,
+      include_station_names = true
+    })
+    player.cursor_stack.label = blueprint_editor_original_label
+    player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
+  else
+    game.print('Blueprint editor surface not found.')
+  end
+  player.teleport(blueprint_editor_original_position, 'nauvis')
+  if player.controller_type == 4 then
+    player.toggle_map_editor()
+  end
+  visibility_bp_editor_popup(player, false)
+  visibility_bp_editor_button(player, true)
 end
 
 
+function visibility_bp_editor_button(player, visibility)
+  if mod_gui.get_button_flow(player)['blueprint-edit-button'] then
+    mod_gui.get_button_flow(player)['blueprint-edit-button'].visible = visibility
+  end
+end
+function visibility_bp_editor_popup(player, visibility)
+  if player.gui.center['bp-editor-popup-flow']['bp-editor-popup-frame'] then
+    player.gui.center['bp-editor-popup-flow']['bp-editor-popup-frame'].visible = visibility
+  end
+end
+
+function clear_bp_editor_button(player)
+  if mod_gui.get_button_flow(player)['blueprint-edit-button'] then
+    mod_gui.get_button_flow(player)['blueprint-edit-button'].destroy()
+    game.print('destroyed blueprint-edit-button')
+  end
+end
+
+function clear_bp_editor_popup(player)
+  if player.gui.center['bp-editor-popup-frame'] then
+    player.gui.center['bp-editor-popup-frame'].destroy()
+  end
+  if player.gui.center['bp-editor-popup-flow'] then
+    player.gui.center['bp-editor-popup-flow'].destroy()
+  end
+end
+
 function create_top_button(player)
-  custom_mod_gui.get_button_flow(player).add
+  clear_bp_editor_button(player)
+  mod_gui.get_button_flow(player).add
   {
     type = "sprite-button",
     name = "blueprint-edit-button",
     sprite = "blueprint-editor-button-1",
     style = mod_gui.button_style
   }
-  custom_mod_gui.get_button_flow(player).add
-  {
-    type = "sprite-button",
-    name = "blueprint-edit-button-exit",
-    sprite = "blueprint-editor-button-1",
-    style = mod_gui.button_style
-  }
-  -- mod_gui.get_frame_flow(player).add
-  -- {
-  --   type = "frame",
-  --   name = "blueprint-edit-frame",
-  --   caption = "Edit Blueprint",
-  --   style = mod_gui.frame_style,
-  --   visible = false
-  -- }
 end
-
-
-function clear_bp_editor_popup (player)
-  if player.gui.center['bp-editor-popup'] then
-    player.gui.center['bp-editor-popup'].destroy()
-  end
-end
-
 function create_bp_editor_popup(player)
   clear_bp_editor_popup(player)
 
@@ -240,29 +263,42 @@ function create_bp_editor_popup(player)
   frame.ignored_by_interaction = false
   frame.style.use_header_filler = true
   
+  local button_exit = frame.add
+  {
+    type = "sprite-button",
+    name = "blueprint-edit-button-exit",
+    sprite = "blueprint-editor-button-1",
+    style = mod_gui.button_style
+  }
+
   return frame
 end
+
+
+
+
 
 
 script.on_event(defines.events.on_player_created ,
   function(event)
     local player = game.get_player(event.player_index)
     create_top_button(player)
+    generate_lab_tile_surface(player, 'bp-editor-surface')
   end
 )
 
 script.on_event(defines.events.on_gui_click ,
   function(event)
+    local blueprint_editor_original_position = {0,0}
     if event.element.name == "blueprint-edit-button" then
       local player = game.get_player(event.player_index)
       blueprint_editor_original_position = player.position
       enter_blueprint_editing(player)
-      create_bp_editor_popup(player)
     end
+
     if event.element.name == "blueprint-edit-button-exit" then
       local player = game.get_player(event.player_index)
-      blueprint_editor_original_position = player.position
-      finish_blueprint_editing(player)
+      finish_blueprint_editing(player, blueprint_editor_original_position)
     end
   end
 )
