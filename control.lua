@@ -192,8 +192,6 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
       include_station_names = true
     })
     result_blueprint_string = player.cursor_stack.export_stack()
-    player.cursor_stack.label = blueprint_editor_original_label
-    player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
   else
     game.print('Blueprint editor surface not found.')
   end
@@ -203,6 +201,8 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
   end
   --player.cursor_stack.set_stack('blueprint')
   player.cursor_stack.import_stack(result_blueprint_string)
+  player.cursor_stack.label = blueprint_editor_original_label
+  player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
   visibility_bp_editor_popup(player, false)
   visibility_bp_editor_button(player, true)
 end
