@@ -179,6 +179,7 @@ end
 
 local function finish_blueprint_editing(player, blueprint_editor_original_position)
   player.cursor_stack.set_stack('blueprint')
+  local result_blueprint_string  = ''
   if game.surfaces['bp-editor-surface'] then
     player.cursor_stack.create_blueprint({
       surface = 'bp-editor-surface',
@@ -190,6 +191,7 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
       include_trains = true,
       include_station_names = true
     })
+    result_blueprint_string = player.cursor_stack.export_stack()
     player.cursor_stack.label = blueprint_editor_original_label
     player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
   else
@@ -199,6 +201,8 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
   if player.controller_type == 4 then
     player.toggle_map_editor()
   end
+  --player.cursor_stack.set_stack('blueprint')
+  player.cursor_stack.import_stack(result_blueprint_string)
   visibility_bp_editor_popup(player, false)
   visibility_bp_editor_button(player, true)
 end
@@ -289,7 +293,7 @@ script.on_event(defines.events.on_player_created ,
 
 script.on_event(defines.events.on_gui_click ,
   function(event)
-    local blueprint_editor_original_position = {0,0}
+    blueprint_editor_original_position = {0,0}
     if event.element.name == "blueprint-edit-button" then
       local player = game.get_player(event.player_index)
       blueprint_editor_original_position = player.position
