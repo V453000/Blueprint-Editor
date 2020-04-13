@@ -1,0 +1,5 @@
+{
+    "Lua.diagnostics.globals": [
+        "blueprint_editor_original_position"
+    ]
+}
