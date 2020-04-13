@@ -200,6 +200,15 @@ local function enter_blueprint_editing(player)
   end
 end
 
+local function is_string_book(player, string)
+  player.cursor_stack.import_stack(string)
+  local result = false
+  if player.cursor_stack.name == 'blueprint-book' then
+    result = true
+  end
+  return result
+end
+
 local function finish_blueprint_editing(player, blueprint_editor_original_position, surface_size, discard_changes)
   if discard_changes == false then
     player.cursor_stack.set_stack('blueprint')
@@ -226,6 +235,10 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
       game.print('Blueprint editor surface not found.')
     end
     toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
+    local is_book = is_string_book(player, original_blueprint_string)
+    if is_book == true then
+      game.print('book')
+    end
     player.cursor_stack.import_stack(result_blueprint_string)
   else
     toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
