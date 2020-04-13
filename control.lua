@@ -172,22 +172,36 @@ local function revert_blueprint_editing(player, original_blueprint_string, edit_
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
+local function is_string_book(player, string)
+  player.cursor_stack.import_stack(string)
+  local result = false
+  if player.cursor_stack.name == 'blueprint-book' then
+    result = true
+  end
+  return result
+end
+
 local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
     if player.cursor_stack.is_blueprint_setup() == true then
-      if player.cursor_stack.name == 'blueprint' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
+      if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
         create_bp_editor_popup(player)
         visibility_bp_editor_popup(player, true)
         visibility_bp_editor_button(player, false)
-
-        blueprint_editor_original_label = player.cursor_stack.label
-        blueprint_editor_original_blueprint_icons = player.cursor_stack.blueprint_icons
+        
         original_blueprint_string = player.cursor_stack.export_stack()
+        input_blueprint = player.cursor_stack
+        local is_book = is_string_book(player, original_blueprint_string)
+        if is_book == true then
+          input_blueprint = player.cursor_stack.get_inventory(defines.inventory.item_main)[player.cursor_stack.active_index]
+        end
+        blueprint_editor_original_label = input_blueprint.label
+        blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
 
         clear_entities(edit_surface)
         toggle_editor_and_teleport(player, e_name, {0,0}, true)
         build_blueprint(player, original_blueprint_string, edit_surface)
-      elseif player.cursor_stack.name == 'blueprint-book' then
+      elseif player.cursor_stack.name == 'blueprint-bookXXXXXX' then
         game.print('Blueprint books are not supported at the moment.')
       else
         game.print('Item in cursor is not a blueprint.')
@@ -198,15 +212,6 @@ local function enter_blueprint_editing(player)
   else
     game.print('No blueprint in cursor.')
   end
-end
-
-local function is_string_book(player, string)
-  player.cursor_stack.import_stack(string)
-  local result = false
-  if player.cursor_stack.name == 'blueprint-book' then
-    result = true
-  end
-  return result
 end
 
 local function finish_blueprint_editing(player, blueprint_editor_original_position, surface_size, discard_changes)
@@ -237,9 +242,12 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
     toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
     local is_book = is_string_book(player, original_blueprint_string)
     if is_book == true then
-      game.print('book')
+      player.cursor_stack.import_stack(original_blueprint_string)
+      local i = player.cursor_stack.active_index
+      player.cursor_stack.get_inventory(defines.inventory.item_main)[i].import_stack(result_blueprint_string)
+    else
+      player.cursor_stack.import_stack(result_blueprint_string)
     end
-    player.cursor_stack.import_stack(result_blueprint_string)
   else
     toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
     player.cursor_stack.import_stack(original_blueprint_string)
