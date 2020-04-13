@@ -187,6 +187,8 @@ local function enter_blueprint_editing(player)
         clear_entities(edit_surface)
         toggle_editor_and_teleport(player, e_name, {0,0}, true)
         build_blueprint(player, original_blueprint_string, edit_surface)
+      elseif player.cursor_stack.name == 'blueprint-book' then
+        game.print('Blueprint books are not supported at the moment.')
       else
         game.print('Item in cursor is not a blueprint.')
       end
