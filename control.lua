@@ -4,7 +4,7 @@ local blueprint_editor_original_position = {0,0}
 local original_blueprint_string = ''
 
 function debug_print(text)
-  game.print(text)
+  --game.print(text)
 end
 
 local e_name = 'bp-editor-surface'
@@ -121,16 +121,17 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
 end
 
 local function toggle_editor_and_teleport(player, destination_surface_name, original_position, editor_on)
-  player.teleport(blueprint_editor_original_position, destination_surface_name)
-    if editor_on == true then  
+  if editor_on == true then  
+    player.teleport({0,0}, destination_surface_name)
       if player.controller_type ~= 4 then
         player.toggle_map_editor()
       end
-    else
-      if player.controller_type == 4 then
-        player.toggle_map_editor()
-      end
+  else
+    player.teleport(blueprint_editor_original_position, destination_surface_name)
+    if player.controller_type == 4 then
+      player.toggle_map_editor()
     end
+  end
 end
 
 local function clear_entities(target_surface)
@@ -173,8 +174,8 @@ end
 
 local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
-    if player.cursor_stack.name == 'blueprint' then
-      if player.cursor_stack.is_blueprint_setup() == true then
+    if player.cursor_stack.is_blueprint_setup() == true then
+      if player.cursor_stack.name == 'blueprint' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
         create_bp_editor_popup(player)
         visibility_bp_editor_popup(player, true)
         visibility_bp_editor_button(player, false)
@@ -187,10 +188,10 @@ local function enter_blueprint_editing(player)
         toggle_editor_and_teleport(player, e_name, {0,0}, true)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
-        game.print('Blueprint in cursor is empty.')
+        game.print('Item in cursor is not a blueprint.')
       end
     else
-      game.print('Item in cursor is not a blueprint.')
+      game.print('Blueprint in cursor is empty.')
     end
   else
     game.print('No blueprint in cursor.')
@@ -228,7 +229,6 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
   visibility_bp_editor_button(player, true)
 end
 
-
 function visibility_bp_editor_button(player, visibility)
   if mod_gui.get_button_flow(player)['blueprint-edit-button'] then
     mod_gui.get_button_flow(player)['blueprint-edit-button'].visible = visibility
@@ -239,14 +239,11 @@ function visibility_bp_editor_popup(player, visibility)
     player.gui.center['bp-editor-popup-flow']['bp-editor-popup-frame'].visible = visibility
   end
 end
-
 function clear_bp_editor_button(player)
   if mod_gui.get_button_flow(player)['blueprint-edit-button'] then
     mod_gui.get_button_flow(player)['blueprint-edit-button'].destroy()
-    game.print('destroyed blueprint-edit-button')
   end
 end
-
 function clear_bp_editor_popup(player)
   if player.gui.center['bp-editor-popup-frame'] then
     player.gui.center['bp-editor-popup-frame'].destroy()
@@ -255,7 +252,6 @@ function clear_bp_editor_popup(player)
     player.gui.center['bp-editor-popup-flow'].destroy()
   end
 end
-
 function create_top_button(player)
   clear_bp_editor_button(player)
   mod_gui.get_button_flow(player).add
@@ -266,7 +262,6 @@ function create_top_button(player)
     style = mod_gui.button_style
   }
 end
-
 function create_bp_editor_popup(player)
   clear_bp_editor_popup(player)
 
@@ -278,7 +273,6 @@ function create_bp_editor_popup(player)
   flow.style.height = player.display_resolution.height*0.8/player.display_scale
   flow.style.vertical_align = 'bottom'
   flow.style.horizontal_align = 'center'
-  --flow.style.use_header_filler = true
 
   local frame = flow.add({
     type = 'frame',
@@ -317,10 +311,13 @@ function create_bp_editor_popup(player)
   return frame
 end
 
-
-
-
-
+script.on_event(defines.events.on_player_cursor_stack_changed ,
+  function(event)
+    local player = game.get_player(event.player_index)
+    create_top_button(player)
+    generate_lab_tile_surface(player, 'bp-editor-surface', blueprint_editor_surface_size )
+  end
+)
 
 script.on_event(defines.events.on_player_created ,
   function(event)
