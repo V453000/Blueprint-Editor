@@ -181,7 +181,7 @@ local function build_blueprint(player, blueprint_string, target_surface)
 
   local ghost_trains = {}
   for _,ghost in pairs(ghosts) do
-    if ghost.ghost_name == 'locomotive' or ghost.ghost_name == 'cargo-wagon' or ghost.ghost_name == 'fluid-wagon' or ghost.ghost_name == 'artillery-wagon' then
+    if ghost.ghost_type == 'locomotive' or ghost.ghost_type == 'cargo-wagon' or ghost.ghost_type == 'fluid-wagon' or ghost.ghost_type == 'artillery-wagon' then
       table.insert(ghost_trains, ghost)
     else
       debug_print(ghost.ghost_name)
