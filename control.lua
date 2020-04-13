@@ -81,6 +81,18 @@ local map_settings =
 
   }
 
+function search_blueprint_string(player, entity_type, string)
+  local entities = {}
+  player.cursor_stack.import_stack(string)
+  local all_entities = player.cursor_stack.get_blueprint_entities()
+  for _, ent in pairs(all_entities) do
+    if game.entity_prototypes[ent.name].type == entity_type then
+      table.insert(entities, ent)
+    end
+  end
+  return entities
+end
+
 function migrate_inventory(source, destination)
   for item_name, item_count in pairs(source.get_inventory[1]) do
     destination.insert{name = item_name, count = item_count}
@@ -234,6 +246,9 @@ local function enter_blueprint_editing(player)
         reset_concrete(edit_surface)
         --set_lab_tiles(edit_surface)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
+
+        local mining_drills = search_blueprint_string(player, 'mining-drill', original_blueprint_string)
+
         build_blueprint(player, original_blueprint_string, edit_surface)
       elseif player.cursor_stack.name == 'blueprint-bookXXXXXX' then
         game.print('Blueprint books are not supported at the moment.')
