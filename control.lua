@@ -1,5 +1,4 @@
 local mod_gui = require("mod-gui")
-local custom_mod_gui = require("custom-mod-gui")
 local blueprint_editor_surface_size = 2
 local blueprint_editor_original_position = {0,0}
 local original_blueprint_string = ''
