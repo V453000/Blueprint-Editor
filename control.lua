@@ -10,6 +10,7 @@ end
 local blueprint_editor_surface_name = 'bp-editor-surface'
 
 
+
 local map_settings = 
   {
     seed = 666,
@@ -86,7 +87,32 @@ function migrate_inventory(source, destination)
   end
 end
 
-function reset_lab_tiles(target_surface)
+function reset_concrete(target_surface)
+  local buildable_tiles = {}
+  for name,tile in pairs(game.tile_prototypes) do
+    if tile.items_to_place_this then
+      --game.print(name)
+      table.insert(buildable_tiles, name)
+    end
+  end
+
+  local old_tiles = target_surface.find_tiles_filtered(buildable_tiles)
+  local new_tiles = {}
+  for _, t in pairs(old_tiles) do
+    local coord_test = (t.position.x + t.position.y)%2
+    local tile_name = 'lab-white'
+    if (coord_test==0) then
+      tile_name = 'lab-dark-1'
+    else
+      tile_name = 'lab-dark-2'
+    end  
+    table.insert(new_tiles, {name = tile_name, position=t.position})
+  end
+  edit_surface.set_tiles(new_tiles)
+  debug_print('Concrete replaced with lab tiles.')
+end
+
+function set_lab_tiles(target_surface)
   local old_tiles = target_surface.find_tiles_filtered({})
     local new_tiles = {}
     for _, t in pairs(old_tiles) do
@@ -115,7 +141,7 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
     edit_surface.force_generate_chunk_requests()
     player.force.chart_all()
     
-    reset_lab_tiles(edit_surface)
+    set_lab_tiles(edit_surface)
     
     edit_surface.destroy_decoratives({invert=true})
     debug_print('Destroyed decoratives.')
@@ -173,7 +199,8 @@ end
 
 local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
   clear_entities(edit_surface)
-  reset_lab_tiles(edit_surface)
+  reset_concrete(edit_surface)
+  --set_lab_tiles(edit_surface)
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
@@ -204,7 +231,8 @@ local function enter_blueprint_editing(player)
         blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
 
         clear_entities(edit_surface)
-        reset_lab_tiles(edit_surface)
+        reset_concrete(edit_surface)
+        --set_lab_tiles(edit_surface)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
         build_blueprint(player, original_blueprint_string, edit_surface)
       elseif player.cursor_stack.name == 'blueprint-bookXXXXXX' then
