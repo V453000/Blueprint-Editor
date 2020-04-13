@@ -7,7 +7,7 @@ function debug_print(text)
   --game.print(text)
 end
 
-local e_name = 'bp-editor-surface'
+local blueprint_editor_surface_name = 'bp-editor-surface'
 
 
 local map_settings = 
@@ -86,19 +86,8 @@ function migrate_inventory(source, destination)
   end
 end
 
-function generate_lab_tile_surface(player, surface_name, surface_size)
-  if game.surfaces[surface_name] then
-    debug_print('Edit surface found.')
-    edit_surface = game.surfaces[surface_name]
-  else
-    debug_print('Edit surface not found, creating...')
-    edit_surface = game.create_surface(surface_name, map_settings)
-    
-    edit_surface.request_to_generate_chunks( {0,0} , surface_size)
-    edit_surface.force_generate_chunk_requests()
-    player.force.chart_all()
-    
-    local old_tiles = edit_surface.find_tiles_filtered({})
+function reset_lab_tiles(target_surface)
+  local old_tiles = target_surface.find_tiles_filtered({})
     local new_tiles = {}
     for _, t in pairs(old_tiles) do
       local coord_test = (t.position.x + t.position.y)%2
@@ -112,6 +101,21 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
     end
     edit_surface.set_tiles(new_tiles)
     debug_print('Generated lab tiles.')
+end
+
+function generate_lab_tile_surface(player, surface_name, surface_size)
+  if game.surfaces[surface_name] then
+    debug_print('Edit surface found.')
+    edit_surface = game.surfaces[surface_name]
+  else
+    debug_print('Edit surface not found, creating...')
+    edit_surface = game.create_surface(surface_name, map_settings)
+    
+    edit_surface.request_to_generate_chunks( {0,0} , surface_size)
+    edit_surface.force_generate_chunk_requests()
+    player.force.chart_all()
+    
+    reset_lab_tiles(edit_surface)
     
     edit_surface.destroy_decoratives({invert=true})
     debug_print('Destroyed decoratives.')
@@ -169,6 +173,7 @@ end
 
 local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
   clear_entities(edit_surface)
+  reset_lab_tiles(edit_surface)
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
@@ -199,7 +204,8 @@ local function enter_blueprint_editing(player)
         blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
 
         clear_entities(edit_surface)
-        toggle_editor_and_teleport(player, e_name, {0,0}, true)
+        reset_lab_tiles(edit_surface)
+        toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
         build_blueprint(player, original_blueprint_string, edit_surface)
       elseif player.cursor_stack.name == 'blueprint-bookXXXXXX' then
         game.print('Blueprint books are not supported at the moment.')
