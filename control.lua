@@ -215,21 +215,21 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
         include_trains = true,
         include_station_names = true
       })
+      if blueprint_editor_original_label then
+        player.cursor_stack.label = blueprint_editor_original_label
+      end
+      if blueprint_editor_original_blueprint_icons then
+        player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
+      end
       result_blueprint_string = player.cursor_stack.export_stack()
     else
       game.print('Blueprint editor surface not found.')
     end
     toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
     player.cursor_stack.import_stack(result_blueprint_string)
-    if blueprint_editor_original_label then
-      player.cursor_stack.label = blueprint_editor_original_label
-    end
-    if blueprint_editor_original_blueprint_icons then
-      player.cursor_stack.blueprint_icons = blueprint_editor_original_blueprint_icons
-    end
   else
-    player.cursor_stack.import_stack(original_blueprint_string)
     toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
+    player.cursor_stack.import_stack(original_blueprint_string)
   end
   visibility_bp_editor_popup(player, false)
   visibility_bp_editor_button(player, true)
