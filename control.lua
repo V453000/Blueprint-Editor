@@ -1,5 +1,5 @@
 local mod_gui = require("mod-gui")
-local blueprint_editor_surface_size = 2
+local blueprint_editor_surface_size = 1
 local blueprint_editor_original_position = {0,0}
 local original_blueprint_string = ''
 
@@ -341,6 +341,71 @@ local function fill_in_water(target_surface)
   target_surface.set_tiles(tiles_to_fill)
 end
 
+local function make_edit_surface_big_enough(player, string, edit_surface)
+  -- get min/max for blueprint entities
+  player.cursor_stack.import_stack(string)
+  local blueprint_entities = player.cursor_stack.get_blueprint(entities)
+  local blueprint_min_x = 0
+  local blueprint_min_y = 0
+  local blueprint_max_x = 0
+  local blueprint_max_y = 0
+  for _, ent in pairs(blueprint_entities) do
+    if ent.position.x < blueprint_min_x then
+      blueprint_min_x = ent.position.x
+    end
+    if ent.position.y < blueprint_min_y then
+      blueprint_min_y = ent.position.y
+    end
+    if ent.position.x > blueprint_max_x then
+      blueprint_max_x = ent.position.x
+    end
+    if ent.position.y > blueprint_max_y then
+      blueprint_max_y = ent.position.y
+    end
+  end
+  local blueprint_size_x = -blueprint_min_x + blueprint_max_x
+  local blueprint_size_y = -blueprint_min_y + blueprint_max_y
+
+  -- get min/max for current edit_surface
+  local surface_min_x = 0
+  local surface_min_y = 0
+  local surface_max_x = 0
+  local surface_max_y = 0
+  for chunk in edit_surface.get_chunks() do
+    if chunk.x < surface_min_x then
+      surface_min_x = chunk.x
+    end
+    if chunk.y < surface_min_y then
+      surface_min_y = chunk.y
+    end
+    if chunk.x > surface_max_x then
+      surface_max_x = chunk.x
+    end
+    if chunk.y > surface_max_y then
+      surface_max_y = chunk.y
+    end
+  end
+  local surface_size_x = -surface_min_x + surface_max_x
+  local surface_size_y = -surface_min_y + surface_max_y
+  
+  -- evaluate min/max
+  local anything_out_of_bounds = false
+  local needed_size = 1
+  if surface_size_x < blueprint_size_x then
+    anything_out_of_bounds = true
+    needed_size = blueprint_size_x
+  end
+  if surface_size_y < blueprint_size_y then
+    anything_out_of_bounds = true
+    if blueprint_size_y > needed_size then
+      needed_size = blueprint_size_y
+    end
+  end
+  edit_surface.request_to_generate_chunks( {0,0} , needed_size + 1 )
+  edit_surface.force_generate_chunk_requests()
+  player.force.chart_all()
+end
+
 local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
   clear_entities(edit_surface)
   reset_concrete(edit_surface)
@@ -370,6 +435,8 @@ local function enter_blueprint_editing(player)
         end
         blueprint_editor_original_label = input_blueprint.label
         blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
+
+        make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
 
         clear_entities(edit_surface)
         reset_concrete(edit_surface)
