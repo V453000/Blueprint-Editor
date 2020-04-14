@@ -9,78 +9,6 @@ end
 
 local blueprint_editor_surface_name = 'bp-editor-surface'
 
-
-
-local map_settings = 
-  {
-    seed = 666,
-    width = 32*blueprint_editor_surface_size,
-    height = 32*blueprint_editor_surface_size,
-    
-    autoplace_controls = {
-      coal = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      ["copper-ore"] = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      ["crude-oil"] = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      ["enemy-base"] = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      ["iron-ore"] = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      stone = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      trees = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      },
-      ["uranium-ore"] = {
-        frequency = 1,
-        richness = 1,
-        size = 0
-      }
-    },
-
-    autoplace_settings = {},
-    cliff_settings = {
-      cliff_elevation_0 = 10,
-      cliff_elevation_interval = 40,
-      name = "cliff",
-      richness = 0
-    },
-    peaceful_mode = false,
-    property_expression_names = {},
-    starting_area = 1,
-    starting_points = {
-      {
-        x = 0,
-        y = 0
-      }
-    },
-    terrain_segmentation = 1,
-    water = 0,
-
-  }
-
 function migrate_inventory(source, destination)
   for item_name, item_count in pairs(source.get_inventory[1]) do
     destination.insert{name = item_name, count = item_count}
@@ -135,15 +63,84 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
     edit_surface = game.surfaces[surface_name]
   else
     debug_print('Edit surface not found, creating...')
+    local map_settings =
+    {
+      seed = 666,
+      width = 8*32,
+      height = 8*32,
+      
+      autoplace_controls = {
+        coal = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        ["copper-ore"] = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        ["crude-oil"] = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        ["enemy-base"] = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        ["iron-ore"] = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        stone = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        trees = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        },
+        ["uranium-ore"] = {
+          frequency = 1,
+          richness = 1,
+          size = 0
+        }
+      },
+
+      autoplace_settings = {},
+      cliff_settings = {
+        cliff_elevation_0 = 10,
+        cliff_elevation_interval = 40,
+        name = "cliff",
+        richness = 0
+      },
+      peaceful_mode = false,
+      property_expression_names = {},
+      starting_area = 1,
+      starting_points = {
+        {
+          x = 0,
+          y = 0
+        }
+      },
+      terrain_segmentation = 1,
+      water = 0,
+
+    }
     edit_surface = game.create_surface(surface_name, map_settings)
     
-    edit_surface.request_to_generate_chunks( {0,0} , surface_size)
+    edit_surface.request_to_generate_chunks( {0,0} , 2)
     edit_surface.force_generate_chunk_requests()
     player.force.chart_all()
     
-    set_lab_tiles(edit_surface)
+    --set_lab_tiles(edit_surface)
     
-    edit_surface.destroy_decoratives({invert=true})
+    --edit_surface.destroy_decoratives({invert=true})
     debug_print('Destroyed decoratives.')
   end
 
@@ -341,10 +338,33 @@ local function fill_in_water(target_surface)
   target_surface.set_tiles(tiles_to_fill)
 end
 
+local function get_surface_area(surface)
+  local surface_min_x = 0
+  local surface_min_y = 0
+  local surface_max_x = 0
+  local surface_max_y = 0
+  for chunk in edit_surface.get_chunks() do
+    if chunk.x < surface_min_x then
+      surface_min_x = chunk.x
+    end
+    if chunk.y < surface_min_y then
+      surface_min_y = chunk.y
+    end
+    if chunk.x > surface_max_x then
+      surface_max_x = chunk.x
+    end
+    if chunk.y > surface_max_y then
+      surface_max_y = chunk.y
+    end
+  end
+  local area = {{surface_min_x*32, surface_min_y*32}, {surface_max_x*32, surface_max_y*32}}
+  return area
+end
+
 local function make_edit_surface_big_enough(player, string, edit_surface)
   -- get min/max for blueprint entities
   player.cursor_stack.import_stack(string)
-  local blueprint_entities = player.cursor_stack.get_blueprint(entities)
+  local blueprint_entities = player.cursor_stack.get_blueprint_entities()
   local blueprint_min_x = 0
   local blueprint_min_y = 0
   local blueprint_max_x = 0
@@ -385,8 +405,8 @@ local function make_edit_surface_big_enough(player, string, edit_surface)
       surface_max_y = chunk.y
     end
   end
-  local surface_size_x = -surface_min_x + surface_max_x
-  local surface_size_y = -surface_min_y + surface_max_y
+  local surface_size_x = (-surface_min_x + surface_max_x)*32
+  local surface_size_y = (-surface_min_y + surface_max_y)*32
   
   -- evaluate min/max
   local anything_out_of_bounds = false
@@ -401,7 +421,7 @@ local function make_edit_surface_big_enough(player, string, edit_surface)
       needed_size = blueprint_size_y
     end
   end
-  edit_surface.request_to_generate_chunks( {0,0} , needed_size + 1 )
+  edit_surface.request_to_generate_chunks( {0,0} , math.ceil(needed_size/32/2) + 1 )
   edit_surface.force_generate_chunk_requests()
   player.force.chart_all()
 end
@@ -437,6 +457,7 @@ local function enter_blueprint_editing(player)
         blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
 
         make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
+        edit_surface.destroy_decoratives({invert=true})
 
         clear_entities(edit_surface)
         reset_concrete(edit_surface)
@@ -461,15 +482,17 @@ local function enter_blueprint_editing(player)
   end
 end
 
-local function finish_blueprint_editing(player, blueprint_editor_original_position, surface_size, discard_changes)
+local function finish_blueprint_editing(player, blueprint_editor_original_position, editor_surface_name, discard_changes)
   if discard_changes == false then
     player.cursor_stack.set_stack('blueprint')
     local result_blueprint_string  = ''
-    if game.surfaces['bp-editor-surface'] then
+    if game.surfaces[editor_surface_name] then
+      local surface_size = 1
+      local surface_area = get_surface_area(game.surfaces[editor_surface_name])
       player.cursor_stack.create_blueprint({
-        surface = 'bp-editor-surface',
+        surface = editor_surface_name,
         force = 'player',
-        area = {{-32*surface_size, -32*surface_size},{32*surface_size,32*surface_size}},
+        area = surface_area,
         always_include_tiles = true,
         include_entities = true,
         include_modules = true,
@@ -611,7 +634,7 @@ script.on_event(defines.events.on_gui_click ,
 
     if event.element.name == "blueprint-edit-button-finish" then
       local player = game.get_player(event.player_index)
-      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_surface_size, false)
+      finish_blueprint_editing(player, blueprint_editor_original_position, 'bp-editor-surface', false)
     end
     if event.element.name == "blueprint-edit-button-revert" then
       local player = game.get_player(event.player_index)
@@ -619,7 +642,7 @@ script.on_event(defines.events.on_gui_click ,
     end
     if event.element.name == "blueprint-edit-button-discard" then
       local player = game.get_player(event.player_index)
-      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_surface_size, true)
+      finish_blueprint_editing(player, blueprint_editor_original_position, 'bp-editor-surface', true)
     end
   end
 )
