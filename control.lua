@@ -218,6 +218,29 @@ local function search_blueprint_string_for_entities(player, entity_type, string)
   return entities
 end
 
+local function search_blueprint_string_for_tiles(player, tile_name, string)
+  local tiles = {}
+  player.cursor_stack.import_stack(string)
+  local all_tiles = player.cursor_stack.get_blueprint_tiles()
+  if all_tiles then
+    for _, t in pairs(all_tiles) do
+      if t.name == tile_name then
+        table.insert(tiles, t)
+      end
+    end
+  end
+  return tiles
+end
+
+local function tiles_for_landfill(player, original_blueprint_string, target_surface)
+  local landfill_tiles = search_blueprint_string_for_tiles(player, 'landfill', original_blueprint_string)
+  local water_tiles = {}
+  for name,tile in pairs(landfill_tiles) do
+    table.insert(water_tiles, {name = 'water', position = tile.position})
+  end
+  target_surface.set_tiles(water_tiles)
+end
+
 local function find_resource(resource_category_name)
   for ent_name, ent in pairs(game.entity_prototypes) do
     if ent.type == 'resource' then
@@ -245,6 +268,7 @@ local function revert_blueprint_editing(player, original_blueprint_string, edit_
   reset_concrete(edit_surface)
   --set_lab_tiles(edit_surface)
   resources_for_mining_drills(player, original_blueprint_string, edit_surface)
+  --tiles_for_landfill(player, original_blueprint_string, edit_surface)
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
@@ -271,6 +295,7 @@ local function enter_blueprint_editing(player)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
 
         resources_for_mining_drills(player, original_blueprint_string, edit_surface)
+        --tiles_for_landfill(player, original_blueprint_string, edit_surface)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
         game.print('Item in cursor is not a blueprint or a blueprint book.')
