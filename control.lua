@@ -81,18 +81,6 @@ local map_settings =
 
   }
 
-function search_blueprint_string(player, entity_type, string)
-  local entities = {}
-  player.cursor_stack.import_stack(string)
-  local all_entities = player.cursor_stack.get_blueprint_entities()
-  for _, ent in pairs(all_entities) do
-    if game.entity_prototypes[ent.name].type == entity_type then
-      table.insert(entities, ent)
-    end
-  end
-  return entities
-end
-
 function migrate_inventory(source, destination)
   for item_name, item_count in pairs(source.get_inventory[1]) do
     destination.insert{name = item_name, count = item_count}
@@ -218,6 +206,18 @@ local function is_string_book(player, string)
   return result
 end
 
+local function search_blueprint_string_for_entities(player, entity_type, string)
+  local entities = {}
+  player.cursor_stack.import_stack(string)
+  local all_entities = player.cursor_stack.get_blueprint_entities()
+  for _, ent in pairs(all_entities) do
+    if game.entity_prototypes[ent.name].type == entity_type then
+      table.insert(entities, ent)
+    end
+  end
+  return entities
+end
+
 local function find_resource(resource_category_name)
   for ent_name, ent in pairs(game.entity_prototypes) do
     if ent.type == 'resource' then
@@ -229,7 +229,7 @@ local function find_resource(resource_category_name)
 end
 
 local function resources_for_mining_drills(player, original_blueprint_string, target_surface)
-  local mining_drills = search_blueprint_string(player, 'mining-drill', original_blueprint_string)
+  local mining_drills = search_blueprint_string_for_entities(player, 'mining-drill', original_blueprint_string)
   for entity_id, drill in pairs(mining_drills) do
     --game.print(drill.name)
     for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
