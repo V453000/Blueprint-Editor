@@ -88,7 +88,7 @@ function migrate_inventory(source, destination)
 end
 
 function reset_concrete(target_surface)
-  local buildable_tiles = {}
+  local buildable_tiles = {'water'}--for resetting water for offshore pumps
   for name,tile in pairs(game.tile_prototypes) do
     if tile.items_to_place_this then
       --game.print(name)
@@ -263,15 +263,6 @@ local function resources_for_mining_drills(player, original_blueprint_string, ta
   end
 end
 
-local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
-  clear_entities(edit_surface)
-  reset_concrete(edit_surface)
-  --set_lab_tiles(edit_surface)
-  resources_for_mining_drills(player, original_blueprint_string, edit_surface)
-  tiles_for_landfill(player, original_blueprint_string, edit_surface)
-  build_blueprint(player, original_blueprint_string, edit_surface)
-end
-
 local function rotate_collision_box_4way(collision_box, direction)
   --{{Xa, Ya},{Xb, Yb}}
   local Xa = collision_box.left_top.x
@@ -318,7 +309,7 @@ end
 local function water_for_offshore_pumps(player, original_blueprint_string, target_surface)
   local offshore_pumps = search_blueprint_string_for_entities(player, 'offshore-pump', original_blueprint_string)
   for entity_id, pump in pairs(offshore_pumps) do
-    game.print(pump.direction)
+    --game.print(pump.direction)
     local pump_prototype = game.entity_prototypes[pump.name]
     local collision_box_offset = pump_prototype.adjacent_tile_collision_box
     --local collision_box_offset = { { -1, -2 }, { 1, -1 } }
@@ -327,6 +318,22 @@ local function water_for_offshore_pumps(player, original_blueprint_string, targe
     target_surface.set_tiles(water_tile_list)
     --log(serpent.block(water_tile_list))
   end
+end
+
+local function landfill_for_entities(player, original_blueprint_string, target_surface)
+  local landfill_tiles = search_blueprint_string_for_tiles(player, 'landfill', original_blueprint_string)
+  target_surface.set_tiles(landfill_tiles)
+end
+
+local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
+  clear_entities(edit_surface)
+  reset_concrete(edit_surface)
+  --set_lab_tiles(edit_surface)
+  resources_for_mining_drills(player, original_blueprint_string, edit_surface)
+  tiles_for_landfill(player, original_blueprint_string, edit_surface)
+  water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
+  landfill_for_entities(player, original_blueprint_string, edit_surface)
+  build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
 local function enter_blueprint_editing(player)
@@ -354,6 +361,7 @@ local function enter_blueprint_editing(player)
         resources_for_mining_drills(player, original_blueprint_string, edit_surface)
         tiles_for_landfill(player, original_blueprint_string, edit_surface)
         water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
+        landfill_for_entities(player, original_blueprint_string, edit_surface)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
         game.print('Item in cursor is not a blueprint or a blueprint book.')
