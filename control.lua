@@ -457,12 +457,12 @@ local function enter_blueprint_editing(player)
         blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
 
         make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
-        edit_surface.destroy_decoratives({invert=true})
-
+        
         clear_entities(edit_surface)
         reset_concrete(edit_surface)
         --set_lab_tiles(edit_surface)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
+        edit_surface.destroy_decoratives({invert=true})
 
         resources_for_mining_drills(player, original_blueprint_string, edit_surface)
         tiles_for_landfill(player, original_blueprint_string, edit_surface)
