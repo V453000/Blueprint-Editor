@@ -268,7 +268,7 @@ local function revert_blueprint_editing(player, original_blueprint_string, edit_
   reset_concrete(edit_surface)
   --set_lab_tiles(edit_surface)
   resources_for_mining_drills(player, original_blueprint_string, edit_surface)
-  --tiles_for_landfill(player, original_blueprint_string, edit_surface)
+  tiles_for_landfill(player, original_blueprint_string, edit_surface)
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
@@ -295,7 +295,7 @@ local function enter_blueprint_editing(player)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
 
         resources_for_mining_drills(player, original_blueprint_string, edit_surface)
-        --tiles_for_landfill(player, original_blueprint_string, edit_surface)
+        tiles_for_landfill(player, original_blueprint_string, edit_surface)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
         game.print('Item in cursor is not a blueprint or a blueprint book.')
