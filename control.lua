@@ -225,6 +225,16 @@ local function is_string_book(player, string)
   return result
 end
 
+function find_resource(resource_category_name)
+  for ent_name, ent in pairs(game.entity_prototypes) do
+    if ent.type == 'resource' then
+      if ent.resource_category == resource_category_name then
+        return(ent_name)
+      end
+    end
+  end
+end
+
 local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
     if player.cursor_stack.is_blueprint_setup() == true then
@@ -248,6 +258,15 @@ local function enter_blueprint_editing(player)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
 
         local mining_drills = search_blueprint_string(player, 'mining-drill', original_blueprint_string)
+        for entity_id, drill in pairs(mining_drills) do
+          --game.print(drill.name)
+          for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
+            --game.print(category)
+            local res_name = find_resource(category_name)
+            local res_ent = edit_surface.create_entity{name = res_name, position = drill.position}
+          end
+        end
+
 
         build_blueprint(player, original_blueprint_string, edit_surface)
       elseif player.cursor_stack.name == 'blueprint-bookXXXXXX' then
