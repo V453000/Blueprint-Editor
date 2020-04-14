@@ -272,6 +272,63 @@ local function revert_blueprint_editing(player, original_blueprint_string, edit_
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
+local function rotate_collision_box_4way(collision_box, direction)
+  --{{Xa, Ya},{Xb, Yb}}
+  local Xa = collision_box.left_top.x
+  local Ya = collision_box.left_top.y
+  local Xb = collision_box.right_bottom.x
+  local Yb = collision_box.right_bottom.y
+
+  local result_collision_box = collision_box
+  
+  -- East
+  if direction == 2 then
+    result_collision_box = {left_top = {x= -Yb, y=-Xb}, right_bottom = {x= -Ya,y= -Xa}}
+  -- South
+  elseif direction == 4 then
+    result_collision_box = {left_top = {x= -Xb,y= -Yb}, right_bottom = {x= -Xa,y= -Ya}}
+  -- West
+  elseif direction == 6 then
+    result_collision_box = {left_top = {x= Ya,y= Xa}, right_bottom = {x= Yb,y= Xb}}
+  end
+
+  return result_collision_box
+end
+
+local function tile_list_from_collision_box(collision_box, offset, tile_name)
+  --{{Xa, Ya},{Xb, Yb}}
+  -- local offset_x = offset.x
+  -- local offset_y = offset.y
+  local Xa = collision_box.left_top.x + offset.x
+  local Ya = collision_box.left_top.y + offset.y
+  local Xb = collision_box.right_bottom.x + offset.x
+  local Yb = collision_box.right_bottom.y + offset.y
+
+  local tile_list = {}
+
+  for y = Ya, Yb, 1 do
+    for x = Xa, Xb, 1 do
+      table.insert(tile_list, {name = tile_name, position = {x,y}})
+    end
+  end
+
+  return tile_list
+end
+
+local function water_for_offshore_pumps(player, original_blueprint_string, target_surface)
+  local offshore_pumps = search_blueprint_string_for_entities(player, 'offshore-pump', original_blueprint_string)
+  for entity_id, pump in pairs(offshore_pumps) do
+    game.print(pump.direction)
+    local pump_prototype = game.entity_prototypes[pump.name]
+    local collision_box_offset = pump_prototype.adjacent_tile_collision_box
+    --local collision_box_offset = { { -1, -2 }, { 1, -1 } }
+    local rotated_collision_box = rotate_collision_box_4way(collision_box_offset, pump.direction)
+    local water_tile_list = tile_list_from_collision_box(rotated_collision_box, pump.position, 'water')
+    target_surface.set_tiles(water_tile_list)
+    --log(serpent.block(water_tile_list))
+  end
+end
+
 local function enter_blueprint_editing(player)
   if player.cursor_stack.valid_for_read then
     if player.cursor_stack.is_blueprint_setup() == true then
@@ -296,6 +353,7 @@ local function enter_blueprint_editing(player)
 
         resources_for_mining_drills(player, original_blueprint_string, edit_surface)
         tiles_for_landfill(player, original_blueprint_string, edit_surface)
+        water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
         game.print('Item in cursor is not a blueprint or a blueprint book.')
