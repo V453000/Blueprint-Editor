@@ -209,13 +209,6 @@ local function build_blueprint(player, blueprint_string, target_surface)
   debug_print('Revived train ghosts.')
 end
 
-local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
-  clear_entities(edit_surface)
-  reset_concrete(edit_surface)
-  --set_lab_tiles(edit_surface)
-  build_blueprint(player, original_blueprint_string, edit_surface)
-end
-
 local function is_string_book(player, string)
   player.cursor_stack.import_stack(string)
   local result = false
@@ -225,7 +218,7 @@ local function is_string_book(player, string)
   return result
 end
 
-function find_resource(resource_category_name)
+local function find_resource(resource_category_name)
   for ent_name, ent in pairs(game.entity_prototypes) do
     if ent.type == 'resource' then
       if ent.resource_category == resource_category_name then
@@ -233,6 +226,26 @@ function find_resource(resource_category_name)
       end
     end
   end
+end
+
+local function resources_for_mining_drills(player, original_blueprint_string, target_surface)
+  local mining_drills = search_blueprint_string(player, 'mining-drill', original_blueprint_string)
+  for entity_id, drill in pairs(mining_drills) do
+    --game.print(drill.name)
+    for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
+      --game.print(category)
+      local res_name = find_resource(category_name)
+      local res_ent = target_surface.create_entity{name = res_name, position = drill.position}
+    end
+  end
+end
+
+local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
+  clear_entities(edit_surface)
+  reset_concrete(edit_surface)
+  --set_lab_tiles(edit_surface)
+  resources_for_mining_drills(player, original_blueprint_string, edit_surface)
+  build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
 local function enter_blueprint_editing(player)
@@ -257,16 +270,7 @@ local function enter_blueprint_editing(player)
         --set_lab_tiles(edit_surface)
         toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
 
-        local mining_drills = search_blueprint_string(player, 'mining-drill', original_blueprint_string)
-        for entity_id, drill in pairs(mining_drills) do
-          --game.print(drill.name)
-          for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
-            --game.print(category)
-            local res_name = find_resource(category_name)
-            local res_ent = edit_surface.create_entity{name = res_name, position = drill.position}
-          end
-        end
-
+        resources_for_mining_drills(player, original_blueprint_string, edit_surface)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
         game.print('Item in cursor is not a blueprint or a blueprint book.')
