@@ -175,7 +175,7 @@ end
 local function build_blueprint(player, blueprint_string, target_surface)
   player.cursor_stack.import_stack(original_blueprint_string)
 
-  local ghosts = player.cursor_stack.build_blueprint{surface = target_surface.name, position = {0,0}, force = 'player' }
+  local ghosts = player.cursor_stack.build_blueprint{surface = target_surface.name, position = {0,0}, force = 'player', force_build = true }
   player.cursor_stack.clear()
   debug_print('Built blueprint.')
 
@@ -325,6 +325,22 @@ local function landfill_for_entities(player, original_blueprint_string, target_s
   target_surface.set_tiles(landfill_tiles)
 end
 
+local function place_offshore_pumps(player, original_blueprint_string, target_surface)
+  local offshore_pumps = search_blueprint_string_for_entities(player, 'offshore-pump', original_blueprint_string)
+  for entity_id, pump in pairs(offshore_pumps) do
+    target_surface.create_entity({name = pump.name, position = pump.position, direction = pump.direction, force='player'})
+  end
+end
+
+local function fill_in_water(target_surface)
+  local water_tiles = target_surface.find_tiles_filtered({name = 'water'})
+  local tiles_to_fill = {}
+  for _, tile in pairs(water_tiles) do
+    table.insert(tiles_to_fill, {name = 'blue-refined-concrete', position = tile.position})
+  end
+  target_surface.set_tiles(tiles_to_fill)
+end
+
 local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
   clear_entities(edit_surface)
   reset_concrete(edit_surface)
@@ -333,6 +349,8 @@ local function revert_blueprint_editing(player, original_blueprint_string, edit_
   tiles_for_landfill(player, original_blueprint_string, edit_surface)
   water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
   landfill_for_entities(player, original_blueprint_string, edit_surface)
+  place_offshore_pumps(player, original_blueprint_string, edit_surface)
+  fill_in_water(edit_surface)
   build_blueprint(player, original_blueprint_string, edit_surface)
 end
 
@@ -362,6 +380,8 @@ local function enter_blueprint_editing(player)
         tiles_for_landfill(player, original_blueprint_string, edit_surface)
         water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
         landfill_for_entities(player, original_blueprint_string, edit_surface)
+        place_offshore_pumps(player, original_blueprint_string, edit_surface)
+        fill_in_water(edit_surface)
         build_blueprint(player, original_blueprint_string, edit_surface)
       else
         game.print('Item in cursor is not a blueprint or a blueprint book.')
