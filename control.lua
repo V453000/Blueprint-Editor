@@ -267,12 +267,9 @@ local function enter_blueprint_editing(player)
           end
         end
 
-
         build_blueprint(player, original_blueprint_string, edit_surface)
-      elseif player.cursor_stack.name == 'blueprint-bookXXXXXX' then
-        game.print('Blueprint books are not supported at the moment.')
       else
-        game.print('Item in cursor is not a blueprint.')
+        game.print('Item in cursor is not a blueprint or a blueprint book.')
       end
     else
       game.print('Blueprint in cursor is empty.')
