@@ -608,6 +608,16 @@ function create_bp_editor_popup(player)
   return frame
 end
 
+script.on_event(defines.events.on_player_display_resolution_changed  ,
+  function(event)
+    local player = game.get_player(event.player_index)
+    create_top_button(player)
+    create_bp_editor_popup(player)
+    visibility_bp_editor_button(player, true)
+    visibility_bp_editor_popup(player, false)
+  end
+)
+
 script.on_event(defines.events.on_player_cursor_stack_changed ,
   function(event)
     local player = game.get_player(event.player_index)
