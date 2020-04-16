@@ -551,13 +551,17 @@ function clear_bp_editor_popup(player)
 end
 function create_top_button(player)
   clear_bp_editor_button(player)
-  mod_gui.get_button_flow(player).add
+  local button = mod_gui.get_button_flow(player).add
   {
     type = "sprite-button",
     name = "blueprint-edit-button",
-    sprite = "blueprint-editor-button-1",
-    style = mod_gui.button_style
+    sprite = "blueprint-editor-button",
+    style = "shortcut_bar_button_blue",
+    --style = mod_gui.button_style
   }
+  button.style.height = 36
+  button.style.width = 36
+  button.style.padding = 1
 end
 function create_bp_editor_popup(player)
   clear_bp_editor_popup(player)

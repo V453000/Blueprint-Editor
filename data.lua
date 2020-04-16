@@ -1,8 +1,8 @@
 data:extend({
   {
     type = "sprite",
-    name = "blueprint-editor-button-1",
-    filename = "__Blueprint-Editor__/graphics/icons/blueprint-edit.png",
-    size = 32,
+    name = "blueprint-editor-button",
+    filename = "__Blueprint-Editor__/graphics/icons/blueprint-editor-button-26.png",
+    size = 26,
   }
 })
