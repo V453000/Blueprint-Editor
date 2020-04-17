@@ -427,7 +427,7 @@ local function make_edit_surface_big_enough(player, string, edit_surface)
   player.force.chart_all()
 end
 
-local function revert_blueprint_editing(player, original_blueprint_string, edit_surface)
+local function reset_blueprint_editing(player, original_blueprint_string, edit_surface)
   clear_entities(edit_surface)
   reset_concrete(edit_surface)
   --set_lab_tiles(edit_surface)
@@ -611,12 +611,12 @@ function create_bp_editor_popup(player)
     tooltip = 'Discard changes and exit the editor.',
     style = 'red_back_button'
   }
-  local button_revert = frame.add
+  local button_reset = frame.add
   {
     type = "button",
-    name = "blueprint-edit-button-revert",
-    caption = 'Revert',
-    tooltip = 'Revert changes and keep editing.',
+    name = "blueprint-edit-button-reset",
+    caption = 'Reset',
+    tooltip = 'Reset changes and keep editing.',
     style = 'dialog_button'
   }
   local button_discard = frame.add
@@ -668,9 +668,9 @@ script.on_event(defines.events.on_gui_click ,
       local player = game.get_player(event.player_index)
       finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, 'bp-editor-surface', false)
     end
-    if event.element.name == "blueprint-edit-button-revert" then
+    if event.element.name == "blueprint-edit-button-reset" then
       local player = game.get_player(event.player_index)
-      revert_blueprint_editing(player, original_blueprint_string, edit_surface)
+      reset_blueprint_editing(player, original_blueprint_string, edit_surface)
     end
     if event.element.name == "blueprint-edit-button-discard" then
       local player = game.get_player(event.player_index)
