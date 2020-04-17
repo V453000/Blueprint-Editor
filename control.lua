@@ -1,6 +1,7 @@
 local mod_gui = require("mod-gui")
 local blueprint_editor_surface_size = 1
 local blueprint_editor_original_position = {0,0}
+local blueprint_editor_original_controller = 1
 local original_blueprint_string = ''
 
 function debug_print(text)
@@ -147,7 +148,7 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
   return edit_surface
 end
 
-local function toggle_editor_and_teleport(player, destination_surface_name, original_position, editor_on)
+local function toggle_editor_and_teleport(player, destination_surface_name, original_position, blueprint_editor_original_controller, editor_on)
   if editor_on == true then  
     player.teleport({0,0}, destination_surface_name)
       if player.controller_type ~= 4 then
@@ -155,7 +156,7 @@ local function toggle_editor_and_teleport(player, destination_surface_name, orig
       end
   else
     player.teleport(blueprint_editor_original_position, destination_surface_name)
-    if player.controller_type == 4 then
+    if player.controller_type == 4 and blueprint_editor_original_controller ~= 4 then
       player.toggle_map_editor()
     end
   end
@@ -338,7 +339,7 @@ local function fill_in_water(target_surface)
   target_surface.set_tiles(tiles_to_fill)
 end
 
-local function get_surface_area(surface)
+local function get_surface_area(edit_surface)
   local surface_min_x = 0
   local surface_min_y = 0
   local surface_max_x = 0
@@ -440,49 +441,55 @@ local function revert_blueprint_editing(player, original_blueprint_string, edit_
 end
 
 local function enter_blueprint_editing(player)
-  if player.cursor_stack.valid_for_read then
-    if player.cursor_stack.is_blueprint_setup() == true then
-      if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
-        create_bp_editor_popup(player)
-        visibility_bp_editor_popup(player, true)
-        visibility_bp_editor_button(player, false)
-        
-        original_blueprint_string = player.cursor_stack.export_stack()
-        input_blueprint = player.cursor_stack
-        local is_book = is_string_book(player, original_blueprint_string)
-        if is_book == true then
-          input_blueprint = player.cursor_stack.get_inventory(defines.inventory.item_main)[player.cursor_stack.active_index]
+  if player.surface.name ~= blueprint_editor_surface_name then
+    blueprint_editor_original_position = player.position
+    if player.cursor_stack.valid_for_read then
+      if player.cursor_stack.is_blueprint_setup() == true then
+        if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
+          create_bp_editor_popup(player)
+          visibility_bp_editor_popup(player, true)
+          visibility_bp_editor_button(player, false)
+          
+          original_blueprint_string = player.cursor_stack.export_stack()
+          input_blueprint = player.cursor_stack
+          local is_book = is_string_book(player, original_blueprint_string)
+          if is_book == true then
+            input_blueprint = player.cursor_stack.get_inventory(defines.inventory.item_main)[player.cursor_stack.active_index]
+          end
+          blueprint_editor_original_label = input_blueprint.label
+          blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
+          blueprint_editor_original_controller = player.controller_type
+
+          make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
+          
+          clear_entities(edit_surface)
+          reset_concrete(edit_surface)
+          --set_lab_tiles(edit_surface)
+          toggle_editor_and_teleport(player, blueprint_editor_surface_name, blueprint_editor_original_position, blueprint_editor_original_controller, true)
+          edit_surface.destroy_decoratives({invert=true})
+
+          resources_for_mining_drills(player, original_blueprint_string, edit_surface)
+          tiles_for_landfill(player, original_blueprint_string, edit_surface)
+          water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
+          landfill_for_entities(player, original_blueprint_string, edit_surface)
+          place_offshore_pumps(player, original_blueprint_string, edit_surface)
+          fill_in_water(edit_surface)
+          build_blueprint(player, original_blueprint_string, edit_surface)
+        else
+          game.print('Item in cursor is not a blueprint or a blueprint book.')
         end
-        blueprint_editor_original_label = input_blueprint.label
-        blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
-
-        make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
-        
-        clear_entities(edit_surface)
-        reset_concrete(edit_surface)
-        --set_lab_tiles(edit_surface)
-        toggle_editor_and_teleport(player, blueprint_editor_surface_name, {0,0}, true)
-        edit_surface.destroy_decoratives({invert=true})
-
-        resources_for_mining_drills(player, original_blueprint_string, edit_surface)
-        tiles_for_landfill(player, original_blueprint_string, edit_surface)
-        water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
-        landfill_for_entities(player, original_blueprint_string, edit_surface)
-        place_offshore_pumps(player, original_blueprint_string, edit_surface)
-        fill_in_water(edit_surface)
-        build_blueprint(player, original_blueprint_string, edit_surface)
       else
-        game.print('Item in cursor is not a blueprint or a blueprint book.')
+        game.print('Blueprint in cursor is empty.')
       end
     else
-      game.print('Blueprint in cursor is empty.')
+      game.print('No blueprint in cursor.')
     end
   else
-    game.print('No blueprint in cursor.')
+    game.print('You are already in Blueprint Editor.')
   end
 end
 
-local function finish_blueprint_editing(player, blueprint_editor_original_position, editor_surface_name, discard_changes)
+local function finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, editor_surface_name, discard_changes)
   if discard_changes == false then
     player.cursor_stack.set_stack('blueprint')
     local result_blueprint_string  = ''
@@ -509,7 +516,7 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
     else
       game.print('Blueprint editor surface not found.')
     end
-    toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
+    toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, blueprint_editor_original_controller, false)
     local is_book = is_string_book(player, original_blueprint_string)
     if is_book == true then
       player.cursor_stack.import_stack(original_blueprint_string)
@@ -519,7 +526,7 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
       player.cursor_stack.import_stack(result_blueprint_string)
     end
   else
-    toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, false)
+    toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, blueprint_editor_original_controller, false)
     player.cursor_stack.import_stack(original_blueprint_string)
   end
   visibility_bp_editor_popup(player, false)
@@ -653,13 +660,13 @@ script.on_event(defines.events.on_gui_click ,
   function(event)
     if event.element.name == "blueprint-edit-button" then
       local player = game.get_player(event.player_index)
-      blueprint_editor_original_position = player.position
+      -- blueprint_editor_original_position = player.position
       enter_blueprint_editing(player)
     end
 
     if event.element.name == "blueprint-edit-button-finish" then
       local player = game.get_player(event.player_index)
-      finish_blueprint_editing(player, blueprint_editor_original_position, 'bp-editor-surface', false)
+      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, 'bp-editor-surface', false)
     end
     if event.element.name == "blueprint-edit-button-revert" then
       local player = game.get_player(event.player_index)
@@ -667,7 +674,7 @@ script.on_event(defines.events.on_gui_click ,
     end
     if event.element.name == "blueprint-edit-button-discard" then
       local player = game.get_player(event.player_index)
-      finish_blueprint_editing(player, blueprint_editor_original_position, 'bp-editor-surface', true)
+      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, 'bp-editor-surface', true)
     end
   end
 )
