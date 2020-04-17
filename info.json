@@ -7,5 +7,5 @@
   "contact": "",
   "homepage": "",
   "description": "Editing blueprints while preserving their name and settings.",
-  "dependencies": ["base"]
+  "dependencies": ["base >= 0.18.19"]
 }
