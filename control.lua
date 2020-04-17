@@ -576,7 +576,7 @@ function create_top_button(player)
     name = "blueprint-edit-button",
     sprite = "blueprint-editor-button",
     style = "shortcut_bar_button_blue",
-    --style = mod_gui.button_style
+    tooltip = {'gui-tooltip.blueprint-editor-button'}
   }
   button.style.height = 36
   button.style.width = 36
