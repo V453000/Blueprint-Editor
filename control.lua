@@ -242,24 +242,6 @@ local function search_blueprint_string_for_tiles(player, tile_name, string)
   return tiles
 end
 
-local function tiles_for_landfill(player, original_blueprint_string, target_surface)
-  local landfill_tiles = search_blueprint_string_for_tiles(player, 'landfill', original_blueprint_string)
-  local water_tiles = {}
-  for name,tile in pairs(landfill_tiles) do
-    table.insert(water_tiles, {name = 'water', position = tile.position})
-  end
-  target_surface.set_tiles(water_tiles)
-end
-
-local function find_resource(resource_category_name)
-  for ent_name, ent in pairs(game.entity_prototypes) do
-    if ent.type == 'resource' then
-      if ent.resource_category == resource_category_name then
-        return(ent_name)
-      end
-    end
-  end
-end
 
 local function determine_rail_offset(player, original_blueprint_string)
   local straight_rails = search_blueprint_string_for_entity_name(player, 'straight-rail', original_blueprint_string)
@@ -295,6 +277,8 @@ local function determine_rail_offset(player, original_blueprint_string)
 
 end
 
+
+
 local function add_positions(position_A, position_B)
   position_result = {position_A.x + position_B.x, position_A.y + position_B.y}
   return position_result
@@ -304,6 +288,25 @@ local function add_array_and_position(array_A, position_B)
   return position_result
 end
 
+local function tiles_for_landfill(player, original_blueprint_string, target_surface)
+  local rail_offset = determine_rail_offset(player, original_blueprint_string)
+  local landfill_tiles = search_blueprint_string_for_tiles(player, 'landfill', original_blueprint_string)
+  local water_tiles = {}
+  for name,tile in pairs(landfill_tiles) do
+    table.insert(water_tiles, {name = 'water', position = add_positions(tile.position, rail_offset)})
+  end
+  target_surface.set_tiles(water_tiles)
+end
+
+local function find_resource(resource_category_name)
+  for ent_name, ent in pairs(game.entity_prototypes) do
+    if ent.type == 'resource' then
+      if ent.resource_category == resource_category_name then
+        return(ent_name)
+      end
+    end
+  end
+end
 local function resources_for_mining_drills(player, original_blueprint_string, target_surface)
   local rail_offset = determine_rail_offset(player, original_blueprint_string)
 
