@@ -299,6 +299,10 @@ local function add_positions(position_A, position_B)
   position_result = {position_A.x + position_B.x, position_A.y + position_B.y}
   return position_result
 end
+local function add_array_and_position(array_A, position_B)
+  position_result = {array_A[1] + position_B.x, array_A[1] + position_B.y}
+  return position_result
+end
 
 local function resources_for_mining_drills(player, original_blueprint_string, target_surface)
   local rail_offset = determine_rail_offset(player, original_blueprint_string)
@@ -358,6 +362,7 @@ local function tile_list_from_collision_box(collision_box, offset, tile_name)
 end
 
 local function water_for_offshore_pumps(player, original_blueprint_string, target_surface)
+  local rail_offset = determine_rail_offset(player, original_blueprint_string)
   local offshore_pumps = search_blueprint_string_for_entities(player, 'offshore-pump', original_blueprint_string)
   for entity_id, pump in pairs(offshore_pumps) do
     --game.print(pump.direction)
@@ -365,21 +370,27 @@ local function water_for_offshore_pumps(player, original_blueprint_string, targe
     local collision_box_offset = pump_prototype.adjacent_tile_collision_box
     --local collision_box_offset = { { -1, -2 }, { 1, -1 } }
     local rotated_collision_box = rotate_collision_box_4way(collision_box_offset, pump.direction)
-    local water_tile_list = tile_list_from_collision_box(rotated_collision_box, pump.position, 'water')
+    local water_tile_list = tile_list_from_collision_box(rotated_collision_box, {x = pump.position.x + rail_offset.x, y = pump.position.y + rail_offset.y}, 'water')
     target_surface.set_tiles(water_tile_list)
     --log(serpent.block(water_tile_list))
   end
 end
 
 local function landfill_for_entities(player, original_blueprint_string, target_surface)
+  local rail_offset = determine_rail_offset(player, original_blueprint_string)
   local landfill_tiles = search_blueprint_string_for_tiles(player, 'landfill', original_blueprint_string)
-  target_surface.set_tiles(landfill_tiles)
+  local landfill_tiles_with_rail_offset = {}
+  for _, tile in pairs(landfill_tiles) do
+    table.insert(landfill_tiles_with_rail_offset, {name = tile.name, position = add_positions(tile.position, rail_offset)})
+  end
+  target_surface.set_tiles(landfill_tiles_with_rail_offset)
 end
 
 local function place_offshore_pumps(player, original_blueprint_string, target_surface)
+  local rail_offset = determine_rail_offset(player, original_blueprint_string)
   local offshore_pumps = search_blueprint_string_for_entities(player, 'offshore-pump', original_blueprint_string)
   for entity_id, pump in pairs(offshore_pumps) do
-    target_surface.create_entity({name = pump.name, position = pump.position, direction = pump.direction, force='player'})
+    target_surface.create_entity({name = pump.name, position = add_positions(pump.position, rail_offset), direction = pump.direction, force='player'})
   end
 end
 
