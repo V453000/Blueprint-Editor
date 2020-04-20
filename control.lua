@@ -216,6 +216,18 @@ local function search_blueprint_string_for_entities(player, entity_type, string)
   return entities
 end
 
+local function search_blueprint_string_for_entity_name(player, entity_name, string)
+  local entities = {}
+  player.cursor_stack.import_stack(string)
+  local all_entities = player.cursor_stack.get_blueprint_entities()
+  for _, ent in pairs(all_entities) do
+    if game.entity_prototypes[ent.name].name == entity_name then
+      table.insert(entities, ent)
+    end
+  end
+  return entities
+end
+
 local function search_blueprint_string_for_tiles(player, tile_name, string)
   local tiles = {}
   player.cursor_stack.import_stack(string)
@@ -249,14 +261,55 @@ local function find_resource(resource_category_name)
   end
 end
 
+local function determine_rail_offset(player, original_blueprint_string)
+  local straight_rails = search_blueprint_string_for_entity_name(player, 'straight-rail', original_blueprint_string)
+  local curved_rails = search_blueprint_string_for_entity_name(player, 'curved-rail', original_blueprint_string)
+  local train_stops = search_blueprint_string_for_entity_name(player, 'train-stop', original_blueprint_string)
+
+  local rail_offset = { x = 0, y = 0}
+
+  for id, straight_rail in pairs(straight_rails) do
+    if (straight_rail.position.x % 2 == 0) or (straight_rail.position.y % 2 == 0) then
+      rail_offset = { x = 1, y = 1}
+      debug_print('Shifting because of straight rails.')
+    end
+  end
+  for id, curved_rail in pairs(curved_rails) do
+    if (curved_rail.position.x % 2 == 1) or (curved_rail.position.y % 2 == 1) then
+      rail_offset = {x = 1, y = 1}
+      debug_print('Shifting because of curved rails.')
+    end
+  end
+  for id, train_stop in pairs(train_stops) do
+    if (train_stop.position.x % 2 == 0) or (train_stop.position.y % 2 == 0) then
+      rail_offset = {x = 1, y = 1}
+      debug_print('Shifting because of train stops.')
+    end
+  end
+  -- data = {}
+  -- data.straight_rails = straight_rails
+  -- data.curved_rails = curved_rails
+  -- data.train_stops = train_stops
+  -- return data
+  return rail_offset
+
+end
+
+local function add_positions(position_A, position_B)
+  position_result = {position_A.x + position_B.x, position_A.y + position_B.y}
+  return position_result
+end
+
 local function resources_for_mining_drills(player, original_blueprint_string, target_surface)
+  local rail_offset = determine_rail_offset(player, original_blueprint_string)
+
   local mining_drills = search_blueprint_string_for_entities(player, 'mining-drill', original_blueprint_string)
   for entity_id, drill in pairs(mining_drills) do
     --game.print(drill.name)
     for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
       --game.print(category)
       local res_name = find_resource(category_name)
-      local res_ent = target_surface.create_entity{name = res_name, position = drill.position}
+      local res_ent = target_surface.create_entity{name = res_name, position = add_positions(drill.position, rail_offset)}
     end
   end
 end
