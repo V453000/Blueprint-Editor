@@ -211,9 +211,11 @@ local function search_blueprint_string_for_entities(player, entity_type, string)
   local entities = {}
   player.cursor_stack.import_stack(string)
   local all_entities = player.cursor_stack.get_blueprint_entities()
-  for _, ent in pairs(all_entities) do
-    if game.entity_prototypes[ent.name].type == entity_type then
-      table.insert(entities, ent)
+  if all_entities then
+    for _, ent in pairs(all_entities) do
+      if game.entity_prototypes[ent.name].type == entity_type then
+        table.insert(entities, ent)
+      end
     end
   end
   return entities
@@ -223,9 +225,11 @@ local function search_blueprint_string_for_entity_name(player, entity_name, stri
   local entities = {}
   player.cursor_stack.import_stack(string)
   local all_entities = player.cursor_stack.get_blueprint_entities()
-  for _, ent in pairs(all_entities) do
-    if game.entity_prototypes[ent.name].name == entity_name then
-      table.insert(entities, ent)
+  if all_entities then
+    for _, ent in pairs(all_entities) do
+      if game.entity_prototypes[ent.name].name == entity_name then
+        table.insert(entities, ent)
+      end
     end
   end
   return entities
@@ -314,12 +318,14 @@ local function resources_for_mining_drills(player, original_blueprint_string, ta
   local rail_offset = determine_rail_offset(player, original_blueprint_string)
 
   local mining_drills = search_blueprint_string_for_entities(player, 'mining-drill', original_blueprint_string)
-  for entity_id, drill in pairs(mining_drills) do
-    --game.print(drill.name)
-    for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
-      --game.print(category)
-      local res_name = find_resource(category_name)
-      local res_ent = target_surface.create_entity{name = res_name, position = add_positions(drill.position, rail_offset)}
+  if mining_drills then
+    for entity_id, drill in pairs(mining_drills) do
+      --game.print(drill.name)
+      for category_name,bool in pairs(game.entity_prototypes[drill.name].resource_categories) do
+        --game.print(category)
+        local res_name = find_resource(category_name)
+        local res_ent = target_surface.create_entity{name = res_name, position = add_positions(drill.position, rail_offset)}
+      end
     end
   end
 end
@@ -440,18 +446,20 @@ local function make_edit_surface_big_enough(player, string, edit_surface)
   local blueprint_min_y = 0
   local blueprint_max_x = 0
   local blueprint_max_y = 0
-  for _, ent in pairs(blueprint_entities) do
-    if ent.position.x < blueprint_min_x then
-      blueprint_min_x = ent.position.x
-    end
-    if ent.position.y < blueprint_min_y then
-      blueprint_min_y = ent.position.y
-    end
-    if ent.position.x > blueprint_max_x then
-      blueprint_max_x = ent.position.x
-    end
-    if ent.position.y > blueprint_max_y then
-      blueprint_max_y = ent.position.y
+  if blueprint_entities then
+    for _, ent in pairs(blueprint_entities) do
+      if ent.position.x < blueprint_min_x then
+        blueprint_min_x = ent.position.x
+      end
+      if ent.position.y < blueprint_min_y then
+        blueprint_min_y = ent.position.y
+      end
+      if ent.position.x > blueprint_max_x then
+        blueprint_max_x = ent.position.x
+      end
+      if ent.position.y > blueprint_max_y then
+        blueprint_max_y = ent.position.y
+      end
     end
   end
   local blueprint_size_x = -blueprint_min_x + blueprint_max_x
