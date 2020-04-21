@@ -1,0 +1,7 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+Date: 2020-04-21
+  Bugfixes:
+    - Fixed that blueprints without entities (only tiles) would crash the editor.
+    - Fixed that resource-changing mods would crash the editor.
+    - Fixed Krastorio2's creep crashing the editor.
