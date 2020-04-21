@@ -641,9 +641,9 @@ function create_top_button(player)
   {
     type = "sprite-button",
     name = "blueprint-edit-button",
-    sprite = "blueprint-editor-button",
+    sprite = "edit-blueprints-button",
     style = "shortcut_bar_button_blue",
-    tooltip = {'gui-tooltip.blueprint-editor-button'}
+    tooltip = {'gui-tooltip.edit-blueprints-button'}
   }
   button.style.height = 36
   button.style.width = 36
