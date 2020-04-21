@@ -64,76 +64,79 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
     edit_surface = game.surfaces[surface_name]
   else
     debug_print('Edit surface not found, creating...')
-    local map_settings =
-    {
-      seed = 666,
-      width = 8*32,
-      height = 8*32,
+    -- local map_settings =
+    -- {
+    --   seed = 666,
+    --   width = 8*32,
+    --   height = 8*32,
       
-      autoplace_controls = {
-        coal = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        ["copper-ore"] = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        ["crude-oil"] = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        ["enemy-base"] = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        ["iron-ore"] = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        stone = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        trees = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        },
-        ["uranium-ore"] = {
-          frequency = 1,
-          richness = 1,
-          size = 0
-        }
-      },
+    --   autoplace_controls = {
+    --     coal = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     ["copper-ore"] = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     ["crude-oil"] = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     ["enemy-base"] = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     ["iron-ore"] = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     stone = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     trees = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     },
+    --     ["uranium-ore"] = {
+    --       frequency = 1,
+    --       richness = 1,
+    --       size = 0
+    --     }
+    --   },
 
-      autoplace_settings = {},
-      cliff_settings = {
-        cliff_elevation_0 = 10,
-        cliff_elevation_interval = 40,
-        name = "cliff",
-        richness = 0
-      },
-      peaceful_mode = false,
-      property_expression_names = {},
-      starting_area = 1,
-      starting_points = {
-        {
-          x = 0,
-          y = 0
-        }
-      },
-      terrain_segmentation = 1,
-      water = 0,
+    --   autoplace_settings = {},
+    --   cliff_settings = {
+    --     cliff_elevation_0 = 10,
+    --     cliff_elevation_interval = 40,
+    --     name = "cliff",
+    --     richness = 0
+    --   },
+    --   peaceful_mode = false,
+    --   property_expression_names = {},
+    --   starting_area = 1,
+    --   starting_points = {
+    --     {
+    --       x = 0,
+    --       y = 0
+    --     }
+    --   },
+    --   terrain_segmentation = 1,
+    --   water = 0,
 
-    }
-    edit_surface = game.create_surface(surface_name, map_settings)
+    -- }
+    local map_settings = game.surfaces['nauvis'].map_gen_settings
+    map_settings.width = 64
+    map_settings.height = 64
+    edit_surface = game.create_surface(surface_name, map_settings)--, map_settings)
     
     edit_surface.request_to_generate_chunks( {0,0} , 2)
     edit_surface.force_generate_chunk_requests()
