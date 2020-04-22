@@ -138,9 +138,9 @@ function generate_lab_tile_surface(player, surface_name, surface_size)
     map_settings.height = 64
     edit_surface = game.create_surface(surface_name, map_settings)--, map_settings)
     
-    edit_surface.request_to_generate_chunks( {0,0} , 2)
-    edit_surface.force_generate_chunk_requests()
-    player.force.chart_all()
+    -- edit_surface.request_to_generate_chunks( {0,0} , 2)
+    -- edit_surface.force_generate_chunk_requests()
+    -- player.force.chart_all()
     
     --set_lab_tiles(edit_surface)
     
@@ -504,7 +504,7 @@ local function make_edit_surface_big_enough(player, string, edit_surface)
   end
   edit_surface.request_to_generate_chunks( {0,0} , math.ceil(needed_size/32/2) + 1 )
   edit_surface.force_generate_chunk_requests()
-  player.force.chart_all()
+  -- player.force.chart_all()
 end
 
 local function reset_blueprint_editing(player, original_blueprint_string, edit_surface)
