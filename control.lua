@@ -198,6 +198,13 @@ local function build_blueprint(player, blueprint_string, target_surface)
     ghost.silent_revive()
   end
   debug_print('Revived train ghosts.')
+
+  for _, slot in pairs(target_surface.find_entities_filtered{name = "item-request-proxy"}) do
+    for name,count in pairs(slot.item_requests) do
+      slot.proxy_target.insert({name = name, count = count})
+    end
+    slot.destroy()
+  end
 end
 
 local function is_string_book(player, string)
