@@ -194,8 +194,10 @@ local function build_blueprint(player, blueprint_string, target_surface)
   debug_print('Revived ghosts.')
 
   for _,ghost in pairs(ghost_trains) do
-    debug_print(ghost.ghost_name)
-    ghost.silent_revive()
+    if ghost.valid == true then
+      debug_print(ghost.ghost_name)
+      ghost.silent_revive()
+    end
   end
   debug_print('Revived train ghosts.')
 
