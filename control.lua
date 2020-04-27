@@ -1,6 +1,7 @@
 local mod_gui = require("mod-gui")
 local blueprint_editor_surface_size = 1
 local blueprint_editor_original_position = {0,0}
+local blueprint_editor_original_surface = 'nauvis'
 local blueprint_editor_original_controller = 1
 local original_blueprint_string = ''
 
@@ -532,6 +533,7 @@ end
 local function enter_blueprint_editing(player)
   if player.surface.name ~= blueprint_editor_surface_name then
     blueprint_editor_original_position = player.position
+    blueprint_editor_original_surface = player.surface
     if player.cursor_stack.valid_for_read then
       if player.cursor_stack.is_blueprint_setup() == true then
         if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
@@ -578,7 +580,7 @@ local function enter_blueprint_editing(player)
   end
 end
 
-local function finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, editor_surface_name, discard_changes)
+local function finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, blueprint_editor_original_surface, editor_surface_name, discard_changes)
   if discard_changes == false then
     player.cursor_stack.set_stack('blueprint')
     local result_blueprint_string  = ''
@@ -605,7 +607,7 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
     else
       game.print('Blueprint editor surface not found.')
     end
-    toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, blueprint_editor_original_controller, false)
+    toggle_editor_and_teleport(player, blueprint_editor_original_surface, blueprint_editor_original_position, blueprint_editor_original_controller, false)
     local is_book = is_string_book(player, original_blueprint_string)
     if is_book == true then
       player.cursor_stack.import_stack(original_blueprint_string)
@@ -615,7 +617,7 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
       player.cursor_stack.import_stack(result_blueprint_string)
     end
   else
-    toggle_editor_and_teleport(player, 'nauvis', blueprint_editor_original_position, blueprint_editor_original_controller, false)
+    toggle_editor_and_teleport(player, blueprint_editor_original_surface, blueprint_editor_original_position, blueprint_editor_original_controller, false)
     player.cursor_stack.import_stack(original_blueprint_string)
   end
   visibility_bp_editor_popup(player, false)
@@ -755,7 +757,7 @@ script.on_event(defines.events.on_gui_click ,
 
     if event.element.name == "blueprint-edit-button-finish" then
       local player = game.get_player(event.player_index)
-      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, 'bp-editor-surface', false)
+      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, blueprint_editor_original_surface, 'bp-editor-surface', false)
     end
     if event.element.name == "blueprint-edit-button-reset" then
       local player = game.get_player(event.player_index)
@@ -763,7 +765,7 @@ script.on_event(defines.events.on_gui_click ,
     end
     if event.element.name == "blueprint-edit-button-discard" then
       local player = game.get_player(event.player_index)
-      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, 'bp-editor-surface', true)
+      finish_blueprint_editing(player, blueprint_editor_original_position, blueprint_editor_original_controller, blueprint_editor_original_surface, 'bp-editor-surface', true)
     end
   end
 )
