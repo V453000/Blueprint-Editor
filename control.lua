@@ -620,6 +620,7 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
     toggle_editor_and_teleport(player, blueprint_editor_original_surface, blueprint_editor_original_position, blueprint_editor_original_controller, false)
     player.cursor_stack.import_stack(original_blueprint_string)
   end
+  clear_entities(game.surfaces[editor_surface_name])
   visibility_bp_editor_popup(player, false)
   visibility_bp_editor_button(player, true)
 end
