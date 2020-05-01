@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.6
+Date: 2020-05-01
+  Bugfixes:
+    - The editor surface is cleaned when exiting editor, to prevent "fake" trains visible in train GUI.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.5
 Date: 2020-04-27
   Bugfixes:
