@@ -534,46 +534,59 @@ local function enter_blueprint_editing(player)
   if player.surface.name ~= blueprint_editor_surface_name then
     blueprint_editor_original_position = player.position
     blueprint_editor_original_surface = player.surface
+    local do_stuff = false
+
     if player.cursor_stack.valid_for_read then
-      if player.cursor_stack.is_blueprint_setup() == true then
-        if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then --if player.cursor_stack.name == 'blueprint' or player.cursor_stack.name == 'blueprint-book' then
-          create_bp_editor_popup(player)
-          visibility_bp_editor_popup(player, true)
-          visibility_bp_editor_button(player, false)
-          
-          original_blueprint_string = player.cursor_stack.export_stack()
-          input_blueprint = player.cursor_stack
-          local is_book = is_string_book(player, original_blueprint_string)
-          if is_book == true then
-            input_blueprint = player.cursor_stack.get_inventory(defines.inventory.item_main)[player.cursor_stack.active_index]
-          end
-          blueprint_editor_original_label = input_blueprint.label
-          blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
-          blueprint_editor_original_controller = player.controller_type
-
-          make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
-          
-          clear_entities(edit_surface)
-          reset_concrete(edit_surface)
-          --set_lab_tiles(edit_surface)
-          toggle_editor_and_teleport(player, blueprint_editor_surface_name, blueprint_editor_original_position, blueprint_editor_original_controller, true)
-          edit_surface.destroy_decoratives({invert=true})
-
-          resources_for_mining_drills(player, original_blueprint_string, edit_surface)
-          tiles_for_landfill(player, original_blueprint_string, edit_surface)
-          water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
-          landfill_for_entities(player, original_blueprint_string, edit_surface)
-          place_offshore_pumps(player, original_blueprint_string, edit_surface)
-          fill_in_water(edit_surface)
-          build_blueprint(player, original_blueprint_string, edit_surface)
+      if player.cursor_stack.is_blueprint == true then
+        if player.cursor_stack.is_blueprint_setup() == true then
+          do_stuff = true
         else
-          game.print('Item in cursor is not a blueprint or a blueprint book.')
+          game.print('Blueprint is empty.')
+        end
+      elseif player.cursor_stack.is_blueprint_book == true then
+        local book_inventory = player.cursor_stack.get_inventory(defines.inventory.item_main)
+        if book_inventory.is_empty() == false then
+          if player.cursor_stack.is_blueprint_setup() == true then
+            do_stuff = true
+          end
+        else
+          game.print('Blueprint book is empty.')
         end
       else
-        game.print('Blueprint in cursor is empty.')
+        game.print('Item in cursor is not a Blueprint or a Blueprint book.')
       end
-    else
-      game.print('No blueprint in cursor.')
+    end
+
+    if do_stuff == true then
+      create_bp_editor_popup(player)
+      visibility_bp_editor_popup(player, true)
+      visibility_bp_editor_button(player, false)
+      
+      original_blueprint_string = player.cursor_stack.export_stack()
+      input_blueprint = player.cursor_stack
+      local is_book = is_string_book(player, original_blueprint_string)
+      if is_book == true then
+        input_blueprint = player.cursor_stack.get_inventory(defines.inventory.item_main)[player.cursor_stack.active_index]
+      end
+      blueprint_editor_original_label = input_blueprint.label
+      blueprint_editor_original_blueprint_icons = input_blueprint.blueprint_icons
+      blueprint_editor_original_controller = player.controller_type
+
+      make_edit_surface_big_enough(player, original_blueprint_string, edit_surface)
+      
+      clear_entities(edit_surface)
+      reset_concrete(edit_surface)
+      --set_lab_tiles(edit_surface)
+      toggle_editor_and_teleport(player, blueprint_editor_surface_name, blueprint_editor_original_position, blueprint_editor_original_controller, true)
+      edit_surface.destroy_decoratives({invert=true})
+
+      resources_for_mining_drills(player, original_blueprint_string, edit_surface)
+      tiles_for_landfill(player, original_blueprint_string, edit_surface)
+      water_for_offshore_pumps(player, original_blueprint_string, edit_surface)
+      landfill_for_entities(player, original_blueprint_string, edit_surface)
+      place_offshore_pumps(player, original_blueprint_string, edit_surface)
+      fill_in_water(edit_surface)
+      build_blueprint(player, original_blueprint_string, edit_surface)
     end
   else
     game.print('You are already in Blueprint Editor.')
