@@ -638,12 +638,12 @@ local function finish_blueprint_editing(player, blueprint_editor_original_positi
   visibility_bp_editor_button(player, true)
 end
 
-local function guess_button_visibiliy(player, editor_surface_name)
+local function guess_button_visibility(player, editor_surface_name)
   if mod_gui.get_button_flow(player)['blueprint-edit-button'] then
     if player.controller_type == 4 and player.surface.name == editor_surface_name then
       mod_gui.get_button_flow(player)['blueprint-edit-button'].visible = false
       player.gui.center['bp-editor-popup-flow']['bp-editor-popup-frame'].visible = true
-    elseif player.controller_type ~= 4 and player.surface.name ~= editor_surface_name then
+    else
       mod_gui.get_button_flow(player)['blueprint-edit-button'].visible = true
       player.gui.center['bp-editor-popup-flow']['bp-editor-popup-frame'].visible = false
     end
@@ -741,7 +741,7 @@ script.on_event(defines.events.on_player_display_resolution_changed  ,
     local player = game.get_player(event.player_index)
     create_top_button(player)
     create_bp_editor_popup(player)
-    guess_button_visibiliy(player, blueprint_editor_surface_name)
+    guess_button_visibility(player, blueprint_editor_surface_name)
   end
 )
 
